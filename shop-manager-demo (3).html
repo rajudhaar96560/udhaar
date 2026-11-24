@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop Manager – Demo</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#172033;--muted:#667085;--brand:#2563eb;--line:#e7eaf0;--green:#12805c;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,"Noto Sans Devanagari",sans-serif}
+header{background:#14213d;color:white;padding:18px 16px}header h1{font-size:21px;margin:0 0 5px}header p{margin:0;color:#d5def0;font-size:13px}
+nav{display:flex;gap:8px;overflow:auto;padding:10px;background:white;position:sticky;top:0;border-bottom:1px solid var(--line);z-index:3}
+nav button,.btn{border:0;border-radius:10px;padding:10px 13px;background:#eaf0ff;color:#1e40af;font-weight:700;white-space:nowrap}
+nav button.active,.btn.primary{background:var(--brand);color:white}
+main{max-width:1000px;margin:auto;padding:15px}.page{display:none}.page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric,.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.metric small{color:var(--muted)}.metric strong{display:block;font-size:23px;margin-top:7px}.panel h2{font-size:17px;margin:0 0 12px}
+form{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{font-size:13px;color:var(--muted);display:block}input,select{width:100%;padding:11px;border:1px solid #d5dae4;border-radius:9px;margin-top:5px;font-size:15px;background:white}
+.full{grid-column:1/-1}.btn{cursor:pointer;padding:11px 14px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line)}th{color:var(--muted)}
+.tablewrap{overflow:auto}.muted{color:var(--muted);font-size:13px}.alert{padding:10px;border-radius:10px;background:#fff3df;color:#8a4b08;margin:8px 0;font-size:13px}
+.good{color:var(--green)}.bad{color:var(--red)}.empty{padding:15px;text-align:center;color:var(--muted)}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header><h1>दुकान मैनेजर</h1><p>स्टॉक • बिक्री • गल्ला • रोज़ाना हिसाब</p></header>
+<nav id="tabs">
+<button class="active" data-page="home">डैशबोर्ड</button><button data-page="stock">स्टॉक</button>
+<button data-page="sale">बिक्री</button><button data-page="purchase">नया माल</button>
+<button data-page="expense">खर्च</button><button data-page="reports">रिपोर्ट</button>
+</nav>
+<main>
+<section id="home" class="page active">
+<div class="grid">
+<div class="metric"><small>आज की बिक्री</small><strong id="todaySales">₹0</strong></div>
+<div class="metric"><small>आज का सकल मुनाफा*</small><strong id="todayProfit">₹0</strong></div>
+<div class="metric"><small>आज के खर्च</small><strong id="todayExpense">₹0</strong></div>
+<div class="metric"><small>गल्ले का अनुमानित बैलेंस</small><strong id="cashBalance">₹0</strong></div>
+</div>
+<div class="panel"><h2>कम स्टॉक अलर्ट</h2><div id="alerts" class="muted">अभी कोई अलर्ट नहीं।</div></div>
+<div class="panel"><h2>आज का काम</h2><div id="todaySummary" class="muted"></div></div>
+<p class="muted">*सकल मुनाफा = बिक्री मूल्य − बिके हुए सामान की खरीद लागत। खर्च अलग दिखाए गए हैं। यह डेमो ऐप है; डेटा इसी ब्राउज़र/डिवाइस में सेव होता है।</p>
+</section>
+<section id="stock" class="page">
+<div class="panel"><h2>प्रोडक्ट जोड़ें / स्टॉक देखें</h2>
+<form id="productForm">
+<label>प्रोडक्ट का नाम<input id="pname" required placeholder="जैसे Airbuds"></label>
+<label>कैटेगरी<input id="pcat" placeholder="जैसे Accessories"></label>
+<label>खरीद कीमत (₹)<input id="pcost" type="number" min="0" step="0.01" required></label>
+<label>बिक्री कीमत (₹)<input id="pprice" type="number" min="0" step="0.01" required></label>
+<label>शुरुआती मात्रा<input id="pqty" type="number" min="0" step="1" required></label>
+<label>कम स्टॉक की सीमा<input id="pmin" type="number" min="0" value="3"></label>
+<button class="btn primary full" type="submit">प्रोडक्ट सेव करें</button>
+</form></div>
+<div class="panel"><h2>मौजूदा स्टॉक</h2><div class="tablewrap"><table><thead><tr><th>प्रोडक्ट</th><th>बाकी</th><th>खरीद</th><th>बिक्री</th><th>अलर्ट सीमा</th></tr></thead><tbody id="stockRows"></tbody></table></div></div>
+</section>
+<section id="sale" class="page">
+<div class="panel"><h2>बिक्री दर्ज करें</h2><form id="saleForm">
+<label class="full">प्रोडक्ट<select id="saleProduct" required></select></label>
+<label>मात्रा<input id="saleQty" type="number" min="1" step="1" required value="1"></label>
+<label>प्रति पीस बिक्री कीमत (₹)<input id="salePrice" type="number" min="0" step="0.01" required></label>
+<label>पेमेंट तरीका<select id="salePay"><option value="cash">नकद</option><option value="udhaar">उधार</option><option value="online">ऑनलाइन</option></select></label>
+<button class="btn primary full" type="submit">बिक्री सेव करें</button>
+</form><p class="muted">बिक्री सेव होते ही स्टॉक कम होगा। नकद बिक्री गल्ले में जुड़ेगी; उधार बिक्री गल्ले में नहीं जुड़ेगी।</p></div>
+</section>
+<section id="purchase" class="page">
+<div class="panel"><h2>नया माल / सप्लाई दर्ज करें</h2><form id="purchaseForm">
+<label class="full">प्रोडक्ट<select id="purchaseProduct" required></select></label>
+<label>आई हुई मात्रा<input id="purchaseQty" type="number" min="1" step="1" required></label>
+<label>प्रति पीस खरीद कीमत (₹)<input id="purchaseCost" type="number" min="0" step="0.01" required></label>
+<label>पेमेंट तरीका<select id="purchasePay"><option value="cash">नकद दिया</option><option value="credit">उधार/बाद में देना है</option></select></label>
+<button class="btn primary full" type="submit">स्टॉक में जोड़ें</button>
+</form></div>
+</section>
+<section id="expense" class="page">
+<div class="panel"><h2>दुकान का खर्च दर्ज करें</h2><form id="expenseForm">
+<label>खर्च का नाम<input id="expenseName" required placeholder="जैसे किराया/चाय"></label>
+<label>रकम (₹)<input id="expenseAmount" type="number" min="0.01" step="0.01" required></label>
+<label class="full">पेमेंट तरीका<select id="expensePay"><option value="cash">गल्ले से नकद</option><option value="online">ऑनलाइन</option></select></label>
+<button class="btn primary full" type="submit">खर्च सेव करें</button>
+</form></div>
+</section>
+<section id="reports" class="page">
+<div class="panel"><h2>रिपोर्ट</h2><div class="actions"><button class="btn primary" id="dayBtn">आज</button><button class="btn" id="monthBtn">यह महीना</button></div>
+<div class="grid" style="margin-top:12px">
+<div class="metric"><small>कुल बिक्री</small><strong id="rSales">₹0</strong></div>
+<div class="metric"><small>सकल मुनाफा*</small><strong id="rProfit">₹0</strong></div>
+<div class="metric"><small>खर्च</small><strong id="rExpense">₹0</strong></div>
+<div class="metric"><small>नकद बिक्री</small><strong id="rCash">₹0</strong></div>
+</div><div id="reportLabel" class="muted"></div></div>
+<div class="panel"><h2>हाल की गतिविधियाँ</h2><div class="tablewrap"><table><thead><tr><th>समय</th><th>काम</th><th>विवरण</th><th>रकम</th></tr></thead><tbody id="activityRows"></tbody></table></div></div>
+<div class="actions"><button class="btn" id="exportBtn">डेटा CSV डाउनलोड करें</button><button class="btn" id="resetBtn">डेमो डेटा मिटाएँ</button></div>
+</section>
+</main>
+<script>
+const KEY='shop_manager_demo_v1';
+let db=JSON.parse(localStorage.getItem(KEY)||'null')||{products:[],sales:[],purchases:[],expenses:[],openingCash:0};
+let reportMode='day';
+const $=id=>document.getElementById(id), money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+const today=()=>new Date().toISOString().slice(0,10);
+const stamp=()=>new Date().toISOString();
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function product(id){return db.products.find(p=>p.id===id)}
+function sum(a,fn){return a.reduce((s,x)=>s+fn(x),0)}
+function cash(){return db.openingCash+sum(db.sales.filter(x=>x.pay==='cash'),x=>x.total)+sum(db.purchases.filter(x=>x.pay==='cash'),x=>-x.total)+sum(db.expenses.filter(x=>x.pay==='cash'),x=>-x.amount)}
+function gross(sales){return sum(sales,x=>x.total-x.cost*x.qty)}
+function setOptions(){for(const id of ['saleProduct','purchaseProduct']){const el=$(id),old=el.value;el.innerHTML='<option value="">प्रोडक्ट चुनें</option>'+db.products.map(p=>`<option value="${p.id}">${esc(p.name)} (स्टॉक: ${p.qty})</option>`).join('');if(product(old))el.value=old}}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){
+$('todaySales').textContent=money(sum(db.sales.filter(x=>x.date===today()),x=>x.total));
+$('todayProfit').textContent=money(gross(db.sales.filter(x=>x.date===today())));
+$('todayExpense').textContent=money(sum(db.expenses.filter(x=>x.date===today()),x=>x.amount));
+$('cashBalance').textContent=money(cash());
+const low=db.products.filter(p=>p.qty<=p.min);
+$('alerts').innerHTML=low.length?low.map(p=>`<div class="alert">⚠️ ${esc(p.name)}: सिर्फ ${p.qty} बचे हैं (अलर्ट सीमा ${p.min})</div>`).join(''):'अभी कोई कम-स्टॉक अलर्ट नहीं।';
+$('todaySummary').textContent=`आज ${db.sales.filter(x=>x.date===today()).length} बिक्री, ${db.purchases.filter(x=>x.date===today()).length} सप्लाई और ${db.expenses.filter(x=>x.date===today()).length} खर्च दर्ज हुए।`;
+$('stockRows').innerHTML=db.products.map(p=>`<tr><td>${esc(p.name)}<br><span class="muted">${esc(p.cat||'')}</span></td><td>${p.qty}</td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td>${p.min}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">अभी कोई प्रोडक्ट नहीं।</td></tr>';
+setOptions();renderReport();
+$('activityRows').innerHTML=[...db.sales.map(x=>({date:x.time,type:'बिक्री',desc:x.name+' × '+x.qty,amount:x.total})),...db.purchases.map(x=>({date:x.time,type:'सप्लाई',desc:x.name+' × '+x.qty,amount:x.total})),...db.expenses.map(x=>({date:x.time,type:'खर्च',desc:x.name,amount:x.amount}))].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).map(x=>`<tr><td>${new Date(x.date).toLocaleString('hi-IN')}</td><td>${x.type}</td><td>${esc(x.desc)}</td><td>${money(x.amount)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">अभी कोई गतिविधि नहीं।</td></tr>';
+}
+function renderReport(){
+const month=new Date().toISOString().slice(0,7),filter=x=>reportMode==='day'?x.date===today():x.date.startsWith(month);
+const s=db.sales.filter(filter),e=db.expenses.filter(filter);
+$('rSales').textContent=money(sum(s,x=>x.total));$('rProfit').textContent=money(gross(s));$('rExpense').textContent=money(sum(e,x=>x.amount));$('rCash').textContent=money(sum(s.filter(x=>x.pay==='cash'),x=>x.total));
+$('reportLabel').textContent=reportMode==='day'?'आज की रिपोर्ट':'इस महीने की रिपोर्ट';
+}
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-page]');if(!b)return;document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===b.dataset.page));render()});
+$('productForm').addEventListener('submit',e=>{e.preventDefault();db.products.push({id:crypto.randomUUID(),name:$('pname').value.trim(),cat:$('pcat').value.trim(),cost:+$('pcost').value,price:+$('pprice').value,qty:+$('pqty').value,min:+$('pmin').value});e.target.reset();$('pmin').value=3;save()});
+$('saleProduct').addEventListener('change',()=>{const p=product($('saleProduct').value);if(p)$('salePrice').value=p.price});
+$('saleForm').addEventListener('submit',e=>{e.preventDefault();const p=product($('saleProduct').value),q=+$('saleQty').value,price=+$('salePrice').value;if(!p)return alert('पहले प्रोडक्ट चुनें');if(q>p.qty)return alert('इतना स्टॉक उपलब्ध नहीं है');p.qty-=q;db.sales.push({id:crypto.randomUUID(),productId:p.id,name:p.name,qty:q,price,cost:p.cost,total:q*price,pay:$('salePay').value,date:today(),time:stamp()});e.target.reset();save()});
+$('purchaseForm').addEventListener('submit',e=>{e.preventDefault();const p=product($('purchaseProduct').value),q=+$('purchaseQty').value,c=+$('purchaseCost').value;if(!p)return alert('पहले प्रोडक्ट चुनें');p.qty+=q;p.cost=c;db.purchases.push({id:crypto.randomUUID(),productId:p.id,name:p.name,qty:q,cost:c,total:q*c,pay:$('purchasePay').value,date:today(),time:stamp()});e.target.reset();save()});
+$('expenseForm').addEventListener('submit',e=>{e.preventDefault();db.expenses.push({name:$('expenseName').value.trim(),amount:+$('expenseAmount').value,pay:$('expensePay').value,date:today(),time:stamp()});e.target.reset();save()});
+$('dayBtn').onclick=()=>{reportMode='day';renderReport()};$('monthBtn').onclick=()=>{reportMode='month';renderReport()};
+$('exportBtn').onclick=()=>{const rows=[['प्रकार','तारीख','नाम','मात्रा','रकम','पेमेंट'],...db.sales.map(x=>['बिक्री',x.date,x.name,x.qty,x.total,x.pay]),...db.purchases.map(x=>['सप्लाई',x.date,x.name,x.qty,x.total,x.pay]),...db.expenses.map(x=>['खर्च',x.date,x.name,'',x.amount,x.pay])];const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='shop-manager-report.csv';a.click();URL.revokeObjectURL(a.href)};
+$('resetBtn').onclick=()=>{if(confirm('इस डेमो का सारा डेटा मिटाना है?')){localStorage.removeItem(KEY);db={products:[],sales:[],purchases:[],expenses:[],openingCash:0};render()}};
+render();
+</script>
+</body></html>
