@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b3d34">
+<title>दुकान हिसाब</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--g:#0b3d34;--g2:#0f766e;--bg:#eef1ef;--ln:#d8dfdb;--mu:#5d6b65;--rd:#b42318;--am:#b45309;--ok:#15803d}
+*{box-sizing:border-box;margin:0}
+body{font:15px/1.5 "Noto Sans Devanagari",system-ui,sans-serif;background:var(--bg);color:#14201a;padding-bottom:88px}
+button,input{font:inherit}
+button{cursor:pointer;border:0;background:none;color:inherit}
+:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+header{background:var(--g);color:#fff;padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top))}
+header b{font-size:19px}header small{display:block;opacity:.75;font-size:12px}
+main{max-width:480px;margin:0 auto;padding:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.k{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:12px}
+.k small{color:var(--mu);font-size:12.5px}.k b{display:block;font-size:22px;margin-top:2px}
+.k.big{grid-column:1/-1;background:var(--g);color:#fff;border:0}.k.big small{color:#bfe3da}.k.big b{font-size:30px}
+.pos{color:var(--ok)}.neg{color:var(--rd)}.k.big .pos{color:#86efac}.k.big .neg{color:#fca5a5}
+.al{background:#fff7ed;border:1.5px solid #f59e0b;border-radius:12px;padding:12px;margin-bottom:12px}
+.al .lr{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #f3d9b0}
+.ok{background:#ecfdf3;color:var(--ok);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-weight:600}
+.wa{display:block;text-align:center;background:#1fa855;color:#fff;font-weight:700;border-radius:10px;padding:11px;margin-top:10px;text-decoration:none}
+h2{font-size:16px;margin:16px 0 8px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border:1px solid var(--ln);border-radius:12px;padding:11px 12px;margin-bottom:8px}
+.row .i{flex:1;min-width:0}.mu{color:var(--mu);font-size:13px}
+.pr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.p{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:14px 10px;text-align:center;font-weight:600}
+.p.l{border-color:#f59e0b;background:#fff7ed}
+.p small{display:block;color:var(--mu);font-weight:400}.p .s{color:var(--am);font-weight:700}
+.btn{width:100%;background:var(--g2);color:#fff;font-weight:700;border-radius:12px;padding:14px;margin-top:10px}
+.btn.gh{background:#fff;color:var(--g);border:1.5px solid var(--g)}
+.btn.rd{background:#fff;color:var(--rd);border:1.5px solid var(--rd)}
+nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--ln);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav button{padding:8px 2px;font-size:11.5px;color:var(--mu)}nav button span{display:block;font-size:20px}
+nav button.on{color:var(--g2);font-weight:700}
+.ov{position:fixed;inset:0;background:#0009;z-index:9;display:flex;align-items:flex-end;justify-content:center}
+.sh{background:#fff;width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+.sh h3{font-size:18px;margin-bottom:8px}
+label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px}
+input{width:100%;border:1.5px solid var(--ln);border-radius:10px;padding:11px;background:#fff}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{border:1.5px solid var(--ln);border-radius:10px;padding:10px 4px;font-weight:600}
+.seg button.on{background:var(--g);color:#fff;border-color:var(--g)}
+.er{color:var(--rd);font-size:13px;min-height:18px;margin-top:6px}
+.vd{border-radius:12px;padding:14px;font-weight:700;font-size:17px;text-align:center;margin-bottom:12px}
+.vd.pos{background:#ecfdf3}.vd.neg{background:#fef3f2}
+.mn{display:flex;justify-content:space-between;align-items:center}.mn button{background:#fff;border:1px solid var(--ln);border-radius:10px;padding:8px 14px;font-size:18px}
+.x{color:var(--mu);font-size:18px;padding:2px 8px}
+</style>
+</head>
+<body>
+<header><b id="hn"></b><small>रोज़ का हिसाब, माल और मुनाफ़ा</small></header>
+<main id="app"></main>
+<nav id="nv"></nav>
+<div id="ov"></div>
+<script>
+var KEY='dukaan-hisaab-v1',MN=['जनवरी','फ़रवरी','मार्च','अप्रैल','मई','जून','जुलाई','अगस्त','सितंबर','अक्टूबर','नवंबर','दिसंबर'];
+var $=function(i){return document.getElementById(i)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+var inr=function(n){return(n<0?'−':'')+'₹'+Math.abs(Math.round(n)).toLocaleString('en-IN')};
+var uid=function(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5)};
+function day(n){var d=new Date();d.setDate(d.getDate()+(n||0));return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function seed(){
+ var t=day(0),y=day(-1);
+ function e(d,type,item,name,qty,cost,price,note){return{id:uid(),d:d,type:type,item:item,name:name,qty:qty,cost:cost,price:price,note:note||''}}
+ return{shop:'मेरी मोबाइल दुकान',ph:'',items:[
+  {id:'a',n:'एयरबड्स',cost:450,price:700,stock:19,min:2},
+  {id:'b',n:'टेम्पर्ड गार्ड',cost:20,price:100,stock:55,min:10},
+  {id:'c',n:'डिस्प्ले',cost:900,price:1500,stock:7,min:2},
+  {id:'d',n:'स्पीकर',cost:500,price:850,stock:8,min:2},
+  {id:'e',n:'डेटा केबल',cost:30,price:100,stock:38,min:8},
+  {id:'f',n:'चार्जर',cost:120,price:250,stock:25,min:5}],
+ log:[e(t,'s','a','एयरबड्स',1,450,700),e(t,'s','b','टेम्पर्ड गार्ड',3,20,100),e(t,'s','e','डेटा केबल',2,30,100),e(t,'l','b','टेम्पर्ड गार्ड',1,20,0,'टूटा'),
+  e(y,'s','c','डिस्प्ले',1,900,1500),e(y,'s','d','स्पीकर',2,500,850),e(y,'i','a','एयरबड्स',5,450,0)]}}
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||seed()}catch(x){return seed()}}
+var S=load(),tab='t',mo=day(0).slice(0,7);
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(x){}}
+var it=function(id){return S.items.find(function(i){return i.id===id})};
+var low=function(){return S.items.filter(function(i){return i.stock<=i.min})};
+function sum(f){var r={u:0,rev:0,pr:0,ls:0,inn:0,net:0};S.log.filter(f).forEach(function(e){
+ if(e.type==='s'){r.u+=e.qty;r.rev+=e.qty*e.price;r.pr+=e.qty*(e.price-e.cost)}else if(e.type==='l')r.ls+=e.qty*e.cost;else r.inn+=e.qty});
+ r.net=r.pr-r.ls;return r}
+var waLink=function(t){return'https://wa.me/'+(S.ph?'91'+S.ph:'')+'?text='+encodeURIComponent(t)};
+var alertText=function(L){return'⚠️ '+S.shop+': माल ख़त्म होने वाला है: '+L.map(function(i){return i.n+' ('+i.stock+' बचे)'}).join(', ')};
+function sheet(h){$('ov').innerHTML='<div class="ov" onclick="if(event.target===this)closeSheet()"><div class="sh" role="dialog">'+h+'</div></div>'}
+function closeSheet(){$('ov').innerHTML=''}
+function cls(n){return n>=0?'pos':'neg'}
+
+function vToday(){
+ var t=day(0),s=sum(function(e){return e.d===t}),L=low(),h='';
+ h+=L.length?'<div class="al"><b>⚠️ ये माल ख़त्म होने वाला है</b>'+L.map(function(i){return'<div class="lr"><span>'+esc(i.n)+'</span><b>'+i.stock+' बचे</b></div>'}).join('')+'<a class="wa" target="_blank" rel="noopener" href="'+waLink(alertText(L))+'">WhatsApp पर अलर्ट भेजें</a></div>':'<div class="ok">✅ सारा माल ठीक है</div>';
+ h+='<div class="grid"><div class="k big"><small>आज की असली कमाई (मुनाफ़ा − नुक़सान)</small><b class="'+cls(s.net)+'">'+inr(s.net)+'</b></div>'+
+ '<div class="k"><small>बिके (पीस)</small><b>'+s.u+'</b></div><div class="k"><small>बिक्री से आए</small><b>'+inr(s.rev)+'</b></div>'+
+ '<div class="k"><small>मुनाफ़ा</small><b class="pos">'+inr(s.pr)+'</b></div><div class="k"><small>नुक़सान (टूटा/वापस)</small><b class="neg">'+inr(s.ls)+'</b></div>'+
+ '<div class="k"><small>माल आया (पीस)</small><b>'+s.inn+'</b></div><div class="k"><small>कुल एंट्री</small><b>'+S.log.filter(function(e){return e.d===t}).length+'</b></div></div><h2>आज की एंट्री</h2>';
+ var T={s:'बिका',i:'माल आया',l:'नुक़सान'},E=S.log.filter(function(e){return e.d===t}).reverse();
+ h+=E.length?E.map(function(e){var a=e.type==='s'?inr(e.qty*e.price):e.type==='l'?'−'+inr(e.qty*e.cost):'+'+e.qty+' पीस';
+  return'<div class="row"><div class="i"><b>'+esc(e.name)+'</b> × '+e.qty+'<div class="mu">'+T[e.type]+(e.note?' ('+esc(e.note)+')':'')+'</div></div><b class="'+(e.type==='l'?'neg':'')+'">'+a+'</b><button class="x" aria-label="हटाएँ" onclick="delEntry(\''+e.id+'\')">✕</button></div>'}).join(''):'<p class="mu">आज अभी कोई एंट्री नहीं। नीचे "एंट्री" में जाकर बिक्री लिखिए।</p>';
+ return h}
+function vSell(){
+ return'<h2 style="margin-top:0">किसकी एंट्री करनी है?</h2><div class="pr">'+S.items.map(function(i){return'<button class="p'+(i.stock<=i.min?' l':'')+'" onclick="openSell(\''+i.id+'\')">'+esc(i.n)+'<small>'+inr(i.price)+'</small><span class="s">स्टॉक '+i.stock+'</span></button>'}).join('')+'</div>'+(S.items.length?'':'<p class="mu">पहले "माल" में प्रोडक्ट जोड़िए।</p>')}
+function vItems(){
+ return S.items.map(function(i){return'<div class="row"><div class="i"><b>'+esc(i.n)+'</b><div class="mu">ख़रीद '+inr(i.cost)+' → बिक्री '+inr(i.price)+' · कम से कम '+i.min+'</div></div><b class="'+(i.stock<=i.min?'neg':'')+'">'+i.stock+'</b><button class="x" aria-label="बदलें" onclick="openItem(\''+i.id+'\')">✎</button></div>'}).join('')+'<button class="btn" onclick="openItem()">+ नया प्रोडक्ट जोड़ें</button>'}
+function mshift(n){var a=mo.split('-'),d=new Date(+a[0],+a[1]-1+n,1);mo=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);render()}
+function vMonth(){
+ var s=sum(function(e){return e.d.indexOf(mo)===0}),D={};
+ S.log.forEach(function(e){if(e.d.indexOf(mo)===0)D[e.d]=(D[e.d]||0)+(e.type==='s'?e.qty*(e.price-e.cost):e.type==='l'?-e.qty*e.cost:0)});
+ var a=mo.split('-'),k=Object.keys(D).sort().reverse();
+ return'<div class="mn"><button aria-label="पिछला महीना" onclick="mshift(-1)">‹</button><b>'+MN[+a[1]-1]+' '+a[0]+'</b><button aria-label="अगला महीना" onclick="mshift(1)">›</button></div><div style="height:12px"></div>'+
+ '<div class="vd '+cls(s.net)+'">इस महीने '+(s.net>=0?'मुनाफ़ा ':'नुक़सान ')+inr(Math.abs(s.net))+'</div>'+
+ '<div class="grid"><div class="k"><small>बिके (पीस)</small><b>'+s.u+'</b></div><div class="k"><small>बिक्री से आए</small><b>'+inr(s.rev)+'</b></div><div class="k"><small>मुनाफ़ा</small><b class="pos">'+inr(s.pr)+'</b></div><div class="k"><small>नुक़सान</small><b class="neg">'+inr(s.ls)+'</b></div></div>'+
+ '<p class="mu">मुनाफ़ा = बिक्री भाव − ख़रीद भाव। नुक़सान = टूटे/वापस माल की ख़रीद क़ीमत। दुकान का किराया, बिजली और नौकर की तनख़्वाह इसमें शामिल नहीं हैं।</p><h2>दिन के हिसाब से</h2>'+
+ (k.length?k.map(function(d){return'<div class="row"><span>'+(+d.slice(8))+' '+MN[+d.slice(5,7)-1]+'</span><b class="'+cls(D[d])+'">'+inr(D[d])+'</b></div>'}).join(''):'<p class="mu">इस महीने कोई एंट्री नहीं।</p>')}
+function vSet(){
+ return'<label for="sn">दुकान का नाम</label><input id="sn" value="'+esc(S.shop)+'" oninput="S.shop=this.value;save();$(\'hn\').textContent=S.shop">'+
+ '<label for="sp">आपका WhatsApp नंबर (अलर्ट के लिए)</label><input id="sp" inputmode="numeric" maxlength="10" placeholder="10 अंक" value="'+esc(S.ph)+'" oninput="this.value=this.value.replace(/\\D/g,\'\');S.ph=this.value;save()">'+
+ '<h2>बैकअप</h2><p class="mu">हफ़्ते में एक बार बैकअप सेव करके WhatsApp पर ख़ुद को भेज दीजिए। फ़ोन बदलने पर हिसाब वापस आ जाएगा।</p>'+
+ '<button class="btn" onclick="backup()">💾 बैकअप सेव करें</button><label class="btn gh" style="display:block;text-align:center;cursor:pointer">📂 बैकअप वापस डालें<input type="file" accept=".json,application/json" style="display:none" onchange="restore(this)"></label>'+
+ '<button class="btn rd" onclick="wipe()">सारा डेमो डेटा हटाकर खाली शुरू करें</button>'}
+
+function openSell(id,m){
+ var i=it(id);m=m||'s';
+ sheet('<h3>'+esc(i.n)+' <span class="mu">स्टॉक '+i.stock+'</span></h3><div class="seg">'+[['s','बिका'],['i','माल आया'],['l','नुक़सान']].map(function(x){return'<button class="'+(m===x[0]?'on':'')+'" onclick="openSell(\''+id+'\',\''+x[0]+'\')">'+x[1]+'</button>'}).join('')+'</div>'+
+ '<label for="q">कितने पीस</label><input id="q" type="number" inputmode="numeric" min="1" value="1">'+
+ (m==='s'?'<label for="p">बेचने का भाव (एक का)</label><input id="p" type="number" inputmode="decimal" value="'+i.price+'">':'')+
+ (m==='i'?'<label for="p">ख़रीद भाव (एक का)</label><input id="p" type="number" inputmode="decimal" value="'+i.cost+'">':'')+
+ (m==='l'?'<label for="nt">कारण (टूटा, वापस, ख़राब)</label><input id="nt" placeholder="कारण लिखें">':'')+
+ '<div class="er" id="er" role="alert"></div><button class="btn" onclick="saveEntry(\''+id+'\',\''+m+'\')">सेव करें</button><button class="btn gh" onclick="closeSheet()">रद्द करें</button>')}
+function saveEntry(id,m){
+ var i=it(id),q=Math.floor(+$('q').value),pe=$('p'),p=pe?+pe.value:0,er=function(x){$('er').textContent=x};
+ if(!(q>0))return er('पीस सही लिखिए');
+ if(m!=='i'&&q>i.stock)return er('स्टॉक में सिर्फ़ '+i.stock+' पीस हैं');
+ if(pe&&(pe.value===''||p<0))return er('भाव लिखिए');
+ S.log.push({id:uid(),d:day(0),type:m,item:id,name:i.n,qty:q,cost:m==='i'?p:i.cost,price:m==='s'?p:0,note:$('nt')?$('nt').value.trim():''});
+ if(m==='i'){i.stock+=q;i.cost=p}else i.stock-=q;
+ save();closeSheet();render();
+ if(m!=='i'&&i.stock<=i.min)sheet('<h3>⚠️ '+esc(i.n)+': सिर्फ़ '+i.stock+' पीस बचे हैं</h3><p class="mu">जल्दी मँगवा लीजिए।</p><a class="wa" target="_blank" rel="noopener" href="'+waLink(alertText([i]))+'">WhatsApp पर अलर्ट भेजें</a><button class="btn gh" onclick="closeSheet()">ठीक है</button>')}
+function delEntry(id){
+ var e=S.log.find(function(x){return x.id===id});if(!e||!confirm('यह एंट्री हटाएँ? स्टॉक वापस ठीक हो जाएगा।'))return;
+ var i=it(e.item);if(i)i.stock+=e.type==='i'?-e.qty:e.qty;
+ S.log=S.log.filter(function(x){return x.id!==id});save();render()}
+function openItem(id){
+ var i=id?it(id):{n:'',cost:'',price:'',stock:0,min:2};
+ sheet('<h3>'+(id?'प्रोडक्ट बदलें':'नया प्रोडक्ट')+'</h3><label for="n">नाम</label><input id="n" value="'+esc(i.n)+'"><label for="c">ख़रीद भाव (एक का)</label><input id="c" type="number" inputmode="decimal" value="'+i.cost+'"><label for="pp">बिक्री भाव (एक का)</label><input id="pp" type="number" inputmode="decimal" value="'+i.price+'"><label for="s">अभी स्टॉक (पीस)</label><input id="s" type="number" inputmode="numeric" value="'+i.stock+'"><label for="m">इतने बचने पर अलर्ट</label><input id="m" type="number" inputmode="numeric" value="'+i.min+'">'+
+ '<div class="er" id="er" role="alert"></div><button class="btn" onclick="saveItem('+(id?'\''+id+'\'':'')+')">सेव करें</button>'+(id?'<button class="btn rd" onclick="delItem(\''+id+'\')">यह प्रोडक्ट हटाएँ</button>':'')+'<button class="btn gh" onclick="closeSheet()">रद्द करें</button>')}
+function saveItem(id){
+ var n=$('n').value.trim(),c=+$('c').value,p=+$('pp').value,s=Math.floor(+$('s').value),m=Math.floor(+$('m').value);
+ if(!n)return $('er').textContent='नाम लिखिए';
+ if($('c').value===''||$('pp').value===''||c<0||p<0||s<0||m<0)return $('er').textContent='भाव और पीस सही लिखिए';
+ var i=id?it(id):{id:uid()};i.n=n;i.cost=c;i.price=p;i.stock=s;i.min=m;if(!id)S.items.push(i);save();closeSheet();render()}
+function delItem(id){if(confirm('प्रोडक्ट हटाएँ? पुराना हिसाब बना रहेगा।')){S.items=S.items.filter(function(i){return i.id!==id});save();closeSheet();render()}}
+function backup(){
+ var b=new Blob([JSON.stringify({app:'dukaan',v:1,saved:day(0),S:S})],{type:'application/json'}),a=document.createElement('a');
+ a.href=URL.createObjectURL(b);a.download='dukaan-backup-'+day(0)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},4000)}
+function restore(inp){
+ var f=inp.files[0];inp.value='';if(!f)return;var r=new FileReader();
+ r.onload=function(){var d;try{d=JSON.parse(r.result)}catch(x){}
+  if(!d||d.app!=='dukaan'||!d.S||!Array.isArray(d.S.items)||!Array.isArray(d.S.log))return alert('यह बैकअप फ़ाइल सही नहीं है');
+  if(confirm('अभी का सारा हिसाब हट जाएगा और '+(d.saved||'')+' के बैकअप का हिसाब आ जाएगा। आगे बढ़ें?')){S=d.S;save();render()}};
+ r.readAsText(f)}
+function wipe(){if(confirm('सारा हिसाब हटाकर खाली शुरू करें? पहले बैकअप ले लीजिए।')){S={shop:S.shop,ph:S.ph,items:[],log:[]};save();tab='i';render()}}
+
+var TABS=[['t','🏠','आज'],['s','➕','एंट्री'],['i','📦','माल'],['m','📅','महीना'],['x','⚙️','सेटिंग']];
+function render(){
+ $('hn').textContent=S.shop;
+ $('nv').innerHTML=TABS.map(function(t){return'<button class="'+(tab===t[0]?'on':'')+'" onclick="tab=\''+t[0]+'\';render();scrollTo(0,0)"><span>'+t[1]+'</span>'+t[2]+'</button>'}).join('');
+ $('app').innerHTML=({t:vToday,s:vSell,i:vItems,m:vMonth,x:vSet})[tab]()}
+render();
+</script>
+</body>
+</html>
